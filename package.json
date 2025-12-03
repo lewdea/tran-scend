@@ -1,0 +1,28 @@
+{
+  "name": "tran-scend",
+  "version": "1.0.0",
+  "description": "智能中英互译 Chrome 扩展",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "2.2.1",
+    "@types/chrome": "^0.0.268",
+    "@types/node": "^24.10.1",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "crx": "^5.0.1",
+    "typescript": "^5.9.3",
+    "vite": "^5.3.3",
+    "vite-plugin-static-copy": "^1.0.6",
+    "vite-plugin-zip-pack": "^1.2.4"
+  }
+}
