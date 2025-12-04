@@ -5,7 +5,6 @@
  */
 export function speakText(text: string, lang: 'en-US' | 'en-GB' = 'en-US'): void {
   if (!('speechSynthesis' in window)) {
-    console.warn('Speech synthesis not supported');
     return;
   }
 

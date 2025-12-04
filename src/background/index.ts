@@ -35,13 +35,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === MESSAGE_ACTIONS.TRANSLATE) {
     const tabId = sender.tab?.id;
     if (!tabId) {
-      console.error('No tab ID available');
       return false;
     }
 
-    console.log('Handling translate request for tab:', tabId, 'text:', request.text);
     handleTranslate(request as TranslateRequest, tabId).catch((error) => {
-      console.error('Translate error:', error);
       sendMessageToTab(tabId, {
         action: MESSAGE_ACTIONS.TRANSLATE_ERROR,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -54,13 +51,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === MESSAGE_ACTIONS.LEARN_WORD) {
     const tabId = sender.tab?.id;
     if (!tabId) {
-      console.error('No tab ID available');
       return false;
     }
 
-    console.log('Handling learn-word request for tab:', tabId, 'text:', request.text);
     handleLearnWord(request as LearnWordRequest, tabId).catch((error) => {
-      console.error('Learn word error:', error);
       sendMessageToTab(tabId, {
         action: MESSAGE_ACTIONS.LEARN_WORD_ERROR,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -73,13 +67,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === MESSAGE_ACTIONS.LEARN_PHRASE) {
     const tabId = sender.tab?.id;
     if (!tabId) {
-      console.error('No tab ID available');
       return false;
     }
 
-    console.log('Handling learn-phrase request for tab:', tabId, 'text:', request.text);
     handleLearnPhrase(request as LearnPhraseRequest, tabId).catch((error) => {
-      console.error('Learn phrase error:', error);
       sendMessageToTab(tabId, {
         action: MESSAGE_ACTIONS.LEARN_WORD_ERROR,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -92,13 +83,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === MESSAGE_ACTIONS.CHECK) {
     const tabId = sender.tab?.id;
     if (!tabId) {
-      console.error('No tab ID available');
       return false;
     }
 
-    console.log('Handling check request for tab:', tabId, 'text:', request.text);
     handleCheck(request as CheckRequest, tabId).catch((error) => {
-      console.error('Check error:', error);
       sendMessageToTab(tabId, {
         action: MESSAGE_ACTIONS.CHECK_ERROR,
         error: error instanceof Error ? error.message : 'Unknown error',

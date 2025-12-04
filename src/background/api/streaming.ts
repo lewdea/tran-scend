@@ -52,9 +52,8 @@ export async function processStreamResponse(
             if (content) {
               handlers.onChunk(content);
             }
-          } catch (e) {
+          } catch {
             // 忽略解析错误
-            console.warn('Failed to parse stream chunk:', e);
           }
         }
       }
@@ -69,9 +68,8 @@ export async function processStreamResponse(
  * 发送消息到 content script
  */
 export function sendMessageToTab(tabId: number, message: ContentMessage): void {
-  chrome.tabs.sendMessage(tabId, message).catch((err) => {
+  chrome.tabs.sendMessage(tabId, message).catch(() => {
     // 忽略发送错误（可能是页面已关闭）
-    console.warn('Failed to send message to tab:', err);
   });
 }
 

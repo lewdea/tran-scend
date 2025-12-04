@@ -37,7 +37,6 @@ export async function handleTranslation(
       translation,
     };
   } catch (error) {
-    console.error('Translation error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return {
       success: false,

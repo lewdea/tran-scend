@@ -115,7 +115,6 @@ function App() {
 
 // 挂载应用
 function initApp() {
-  console.log('initApp');
   const rootElement = document.getElementById('root');
   if (rootElement) {
     const root = createRoot(rootElement);

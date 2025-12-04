@@ -122,7 +122,6 @@ class ContentApp {
       },
       () => {
         if (chrome.runtime.lastError) {
-          console.error('Error sending message:', chrome.runtime.lastError);
           if (this.currentSelection) {
             const errorHTML = `<div class="${CSS_CLASSES.RESULT_ERROR}">❌ ${TEXT.ERROR.API_FAILED}: ${chrome.runtime.lastError.message}</div>`;
             this.resultContainer.show(errorHTML, this.currentSelection, TEXT.HEADER.LEARN);
@@ -155,7 +154,6 @@ class ContentApp {
       },
       () => {
         if (chrome.runtime.lastError) {
-          console.error('Error sending message:', chrome.runtime.lastError);
           if (this.currentSelection) {
             const errorHTML = `<div class="${CSS_CLASSES.RESULT_ERROR}">❌ ${TEXT.ERROR.API_FAILED}: ${chrome.runtime.lastError.message}</div>`;
             this.resultContainer.show(errorHTML, this.currentSelection, TEXT.HEADER.TRANSLATE);
@@ -188,7 +186,6 @@ class ContentApp {
       },
       () => {
         if (chrome.runtime.lastError) {
-          console.error('Error sending message:', chrome.runtime.lastError);
           if (this.currentSelection) {
             const errorHTML = `<div class="${CSS_CLASSES.RESULT_ERROR}">❌ ${TEXT.ERROR.API_FAILED}: ${chrome.runtime.lastError.message}</div>`;
             this.resultContainer.show(errorHTML, this.currentSelection, TEXT.HEADER.CHECK);
@@ -200,7 +197,6 @@ class ContentApp {
 
   private initMessageListener(): void {
     chrome.runtime.onMessage.addListener((message: ContentMessage) => {
-      console.log('Received message:', message.action);
       this.messageHandler.handle(message);
     });
   }

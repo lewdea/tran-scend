@@ -61,7 +61,6 @@ export class MessageHandler {
   }
 
   private handleDone(): void {
-    console.log('Stream completed');
     // 流式内容完成后，添加音标播放按钮
     this.resultContainer.finishStreaming();
   }
