@@ -8,6 +8,7 @@ import type { Selection } from '../../types';
 export class MessageHandler {
   private resultContainer: ResultContainer;
   private currentSelection: Selection | null = null;
+  private currentWord: string = ''; // 当前学习的单词
 
   constructor(resultContainer: ResultContainer) {
     this.resultContainer = resultContainer;
@@ -15,6 +16,10 @@ export class MessageHandler {
 
   setCurrentSelection(selection: Selection | null): void {
     this.currentSelection = selection;
+  }
+
+  setCurrentWord(word: string): void {
+    this.currentWord = word;
   }
 
   handle(message: ContentMessage): void {
@@ -51,12 +56,14 @@ export class MessageHandler {
 
   private handleChunk(content: string): void {
     if (this.currentSelection) {
-      this.resultContainer.appendChunk(content, this.currentSelection);
+      this.resultContainer.appendChunk(content, this.currentSelection, this.currentWord);
     }
   }
 
   private handleDone(): void {
     console.log('Stream completed');
+    // 流式内容完成后，添加音标播放按钮
+    this.resultContainer.finishStreaming();
   }
 
   private handleError(error: string, headerText: string = 'Learn'): void {

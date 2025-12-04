@@ -2,12 +2,15 @@
 
 import { applyColorScheme } from '../../utils/colorScheme';
 import { calculateResultPosition } from '../../utils/position';
+import { speakText } from '../../utils/speech';
 import { ELEMENT_IDS, CSS_CLASSES, TEXT } from '../constants';
 import type { Selection } from '../../types';
 
 export class ResultContainer {
   private container: HTMLDivElement | null = null;
   private accumulatedContent: string = '';
+  private currentWord: string = ''; // 当前学习的单词
+  private phoneticButtonsAdded: boolean = false; // 是否已添加音标按钮
 
   create(): HTMLDivElement {
     const container = document.createElement('div');
@@ -17,12 +20,17 @@ export class ResultContainer {
     return container;
   }
 
-  show(text: string, selection: Selection, headerText: string = TEXT.HEADER.RESULT): void {
+  show(text: string, selection: Selection, headerText: string = TEXT.HEADER.RESULT, word?: string): void {
     if (!this.container) {
       this.container = this.create();
       document.body.appendChild(this.container);
     } else {
       applyColorScheme(this.container);
+    }
+
+    // 保存单词（如果是 Learn 功能）
+    if (word) {
+      this.currentWord = word;
     }
 
     // 构建 HTML
@@ -31,6 +39,22 @@ export class ResultContainer {
 
     // 添加事件监听
     this.attachEventListeners();
+    
+    // 添加音标播放按钮（只在非流式显示时）
+    if (word) {
+      const contentDiv = this.container.querySelector(`.${CSS_CLASSES.RESULT_CONTENT}`) as HTMLDivElement;
+      if (contentDiv) {
+        // 在内容中插入按钮
+        const contentWithButtons = this.insertPhoneticButtons(text, word);
+        if (contentWithButtons !== text) {
+          contentDiv.innerHTML = contentWithButtons;
+          this.phoneticButtonsAdded = true;
+          setTimeout(() => {
+            this.attachPhoneticButtonListeners(contentDiv);
+          }, 0);
+        }
+      }
+    }
 
     // 计算并设置位置
     this.container.style.setProperty('display', 'block');
@@ -49,8 +73,13 @@ export class ResultContainer {
     this.container.style.setProperty('visibility', 'visible');
   }
 
-  appendChunk(content: string, selection: Selection | null): void {
+  appendChunk(content: string, selection: Selection | null, word?: string): void {
     this.accumulatedContent += content;
+
+    // 保存单词（如果是第一次）
+    if (word && !this.currentWord) {
+      this.currentWord = word;
+    }
 
     if (!this.container) {
       this.container = this.create();
@@ -90,6 +119,39 @@ export class ResultContainer {
     }
   }
 
+  /**
+   * 流式内容完成后，添加音标播放按钮
+   */
+  finishStreaming(): void {
+    if (!this.currentWord || this.phoneticButtonsAdded) {
+      return;
+    }
+
+    const contentDiv = this.container?.querySelector(`.${CSS_CLASSES.RESULT_CONTENT}`) as HTMLDivElement;
+    if (!contentDiv) {
+      return;
+    }
+
+    // 检查是否包含音标
+    const hasPhonetic = this.accumulatedContent.includes('美式') || this.accumulatedContent.includes('英式');
+    if (!hasPhonetic) {
+      return;
+    }
+
+    // 在内容中插入按钮
+    const contentWithButtons = this.insertPhoneticButtons(this.accumulatedContent, this.currentWord);
+    if (contentWithButtons !== this.accumulatedContent) {
+      this.accumulatedContent = contentWithButtons;
+      contentDiv.innerHTML = this.accumulatedContent;
+      this.phoneticButtonsAdded = true;
+      
+      // 添加事件监听
+      setTimeout(() => {
+        this.attachPhoneticButtonListeners(contentDiv);
+      }, 0);
+    }
+  }
+
   hide(): void {
     if (this.container) {
       this.container.style.setProperty('display', 'none');
@@ -99,6 +161,8 @@ export class ResultContainer {
 
   reset(): void {
     this.accumulatedContent = '';
+    this.currentWord = '';
+    this.phoneticButtonsAdded = false;
   }
 
   private buildHTML(text: string, headerText: string): string {
@@ -160,6 +224,71 @@ export class ResultContainer {
 
   getElement(): HTMLDivElement | null {
     return this.container;
+  }
+
+  /**
+   * 在内容字符串中插入音标播放按钮
+   */
+  private insertPhoneticButtons(content: string, word: string): string {
+    if (!word || content.includes('transcend-phonetic-btn')) {
+      return content;
+    }
+
+    let result = content;
+
+    // 处理美式音标
+    // 格式1: 美式：<code>音标</code>
+    if (result.includes('美式') && result.match(/美式[：:]\s*<code[^>]*>([^<]+)<\/code>/)) {
+      result = result.replace(
+        /美式[：:]\s*<code[^>]*>([^<]+)<\/code>/,
+        `美式：<code class="transcend-phonetic">$1</code> <button class="transcend-phonetic-btn" data-word="${word}" data-lang="en-US" title="Play US pronunciation">🔊</button>`
+      );
+    }
+    // 格式2: 美式：[音标]
+    else if (result.includes('美式') && result.match(/美式[：:]\s*\[([^\]]+)\]/)) {
+      result = result.replace(
+        /美式[：:]\s*\[([^\]]+)\]/,
+        `美式：<code class="transcend-phonetic">$1</code> <button class="transcend-phonetic-btn" data-word="${word}" data-lang="en-US" title="Play US pronunciation">🔊</button>`
+      );
+    }
+
+    // 处理英式音标
+    // 格式1: 英式：<code>音标</code>
+    if (result.includes('英式') && result.match(/英式[：:]\s*<code[^>]*>([^<]+)<\/code>/)) {
+      result = result.replace(
+        /英式[：:]\s*<code[^>]*>([^<]+)<\/code>/,
+        `英式：<code class="transcend-phonetic">$1</code> <button class="transcend-phonetic-btn" data-word="${word}" data-lang="en-GB" title="Play UK pronunciation">🔊</button>`
+      );
+    }
+    // 格式2: 英式：[音标]
+    else if (result.includes('英式') && result.match(/英式[：:]\s*\[([^\]]+)\]/)) {
+      result = result.replace(
+        /英式[：:]\s*\[([^\]]+)\]/,
+        `英式：<code class="transcend-phonetic">$1</code> <button class="transcend-phonetic-btn" data-word="${word}" data-lang="en-GB" title="Play UK pronunciation">🔊</button>`
+      );
+    }
+
+    return result;
+  }
+
+  /**
+   * 为音标播放按钮添加事件监听
+   */
+  private attachPhoneticButtonListeners(contentDiv: HTMLDivElement): void {
+    const buttons = contentDiv.querySelectorAll('.transcend-phonetic-btn');
+    buttons.forEach((btn) => {
+      if (!btn.hasAttribute('data-listener')) {
+        btn.setAttribute('data-listener', 'true');
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const word = (btn as HTMLElement).getAttribute('data-word');
+          const lang = (btn as HTMLElement).getAttribute('data-lang') as 'en-US' | 'en-GB';
+          if (word) {
+            speakText(word, lang);
+          }
+        });
+      }
+    });
   }
 }
 

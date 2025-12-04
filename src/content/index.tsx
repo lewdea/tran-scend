@@ -99,12 +99,18 @@ class ContentApp {
     this.resultContainer.hide();
     this.resultContainer.reset();
 
+    // 保存当前单词（如果是单词学习）
+    if (isWord) {
+      this.messageHandler.setCurrentWord(text);
+    }
+
     // 显示加载状态
     const loadingText = isWord ? TEXT.LOADING.WORD : TEXT.LOADING.PHRASE;
     const loadingHTML = `<div class="${CSS_CLASSES.RESULT_LOADING}">${loadingText}</div>`;
     
     if (this.currentSelection) {
-      this.resultContainer.show(loadingHTML, this.currentSelection, TEXT.HEADER.LEARN);
+      const word = isWord ? text : undefined;
+      this.resultContainer.show(loadingHTML, this.currentSelection, TEXT.HEADER.LEARN, word);
     }
 
     // 发送请求
