@@ -29,6 +29,7 @@ class ContentApp {
   private buttonHandlers: ButtonHandlers;
   private colorSchemeListener: ColorSchemeListener;
   private currentSelection: Selection | null = null;
+  private isEnabled: boolean = true; // 是否启用按钮组
 
   constructor() {
     // 初始化组件
@@ -36,7 +37,17 @@ class ContentApp {
     this.resultContainer = new ResultContainer();
     this.messageHandler = new MessageHandler(this.resultContainer);
     this.colorSchemeListener = new ColorSchemeListener();
-    
+
+    // 检查当前域名是否在黑名单中
+    this.checkDomainBlocklist();
+
+    // 监听存储变化，实时更新黑名单状态
+    chrome.storage.onChanged.addListener((changes, areaName) => {
+      if (areaName === 'local' && changes.blockedDomains) {
+        this.checkDomainBlocklist();
+      }
+    });
+
     // 初始化监听器（它们在构造函数中会自动开始工作）
     new ClickListener(() => this.hideButtonGroup());
     new ScrollListener(() => this.hideButtonGroup());
@@ -65,10 +76,39 @@ class ContentApp {
     this.currentSelection = selection;
     this.messageHandler.setCurrentSelection(selection);
 
+    // 如果域名被禁用，不显示按钮组
+    if (!this.isEnabled) {
+      return;
+    }
+
     if (selection) {
       this.showButtonGroup(selection);
     } else {
       this.hideButtonGroup();
+    }
+  }
+
+  /**
+   * 检查当前域名是否在黑名单中
+   */
+  private async checkDomainBlocklist(): Promise<void> {
+    try {
+      const result = await chrome.storage.local.get(['blockedDomains']);
+      const blockedDomains: string[] = result.blockedDomains || [];
+
+      if (blockedDomains.length === 0) {
+        this.isEnabled = true;
+        return;
+      }
+
+      // 获取当前域名（去除 www 前缀）
+      const currentDomain = window.location.hostname.replace(/^www\./, '').toLowerCase();
+
+      // 检查是否在黑名单中
+      this.isEnabled = !blockedDomains.includes(currentDomain);
+    } catch {
+      // 如果检查失败，默认启用
+      this.isEnabled = true;
     }
   }
 
@@ -78,7 +118,7 @@ class ContentApp {
     if (!windowSelection || windowSelection.rangeCount === 0) return;
     const range = windowSelection.getRangeAt(0);
     const rect = range.getBoundingClientRect();
-    
+
     this.buttonGroup.show(
       rect,
       () => this.buttonHandlers.handleLearn(this.currentSelection),
@@ -107,7 +147,7 @@ class ContentApp {
     // 显示加载状态
     const loadingText = isWord ? TEXT.LOADING.WORD : TEXT.LOADING.PHRASE;
     const loadingHTML = `<div class="${CSS_CLASSES.RESULT_LOADING}">${loadingText}</div>`;
-    
+
     if (this.currentSelection) {
       const word = isWord ? text : undefined;
       this.resultContainer.show(loadingHTML, this.currentSelection, TEXT.HEADER.LEARN, word);
@@ -141,7 +181,7 @@ class ContentApp {
 
     // 显示加载状态
     const loadingHTML = `<div class="${CSS_CLASSES.RESULT_LOADING}">${TEXT.LOADING.TRANSLATE}</div>`;
-    
+
     if (this.currentSelection) {
       this.resultContainer.show(loadingHTML, this.currentSelection, TEXT.HEADER.TRANSLATE);
     }
@@ -173,7 +213,7 @@ class ContentApp {
 
     // 显示加载状态
     const loadingHTML = `<div class="${CSS_CLASSES.RESULT_LOADING}">${TEXT.LOADING.CHECK}</div>`;
-    
+
     if (this.currentSelection) {
       this.resultContainer.show(loadingHTML, this.currentSelection, TEXT.HEADER.CHECK);
     }

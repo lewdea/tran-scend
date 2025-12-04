@@ -38,6 +38,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       return false;
     }
 
+    // 立即响应，表示消息已接收
+    sendResponse({ success: true });
+    
+    // 异步处理流式响应
     handleTranslate(request as TranslateRequest, tabId).catch((error) => {
       sendMessageToTab(tabId, {
         action: MESSAGE_ACTIONS.TRANSLATE_ERROR,
@@ -54,6 +58,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       return false;
     }
 
+    // 立即响应，表示消息已接收
+    sendResponse({ success: true });
+    
+    // 异步处理流式响应
     handleLearnWord(request as LearnWordRequest, tabId).catch((error) => {
       sendMessageToTab(tabId, {
         action: MESSAGE_ACTIONS.LEARN_WORD_ERROR,
@@ -70,6 +78,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       return false;
     }
 
+    // 立即响应，表示消息已接收
+    sendResponse({ success: true });
+    
+    // 异步处理流式响应
     handleLearnPhrase(request as LearnPhraseRequest, tabId).catch((error) => {
       sendMessageToTab(tabId, {
         action: MESSAGE_ACTIONS.LEARN_WORD_ERROR,
@@ -86,6 +98,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       return false;
     }
 
+    // 立即响应，表示消息已接收
+    sendResponse({ success: true });
+    
+    // 异步处理流式响应
     handleCheck(request as CheckRequest, tabId).catch((error) => {
       sendMessageToTab(tabId, {
         action: MESSAGE_ACTIONS.CHECK_ERROR,

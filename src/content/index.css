@@ -1,6 +1,20 @@
-/* Content script styles - 结果容器不使用 all: initial，直接设置样式 */
+/* Content script styles - AI Theme Redesign */
+
+:root {
+  --ts-bg-color: #0a0b1e;
+  --ts-text-primary: #e0e6ed;
+  --ts-text-secondary: #94a3b8;
+  --ts-accent-primary: #00f2ff;
+  --ts-accent-secondary: #7000ff;
+  --ts-glass-bg: rgba(10, 11, 30, 0.85);
+  --ts-glass-border: rgba(0, 242, 255, 0.2);
+  --ts-glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  --ts-success-color: #00ff9d;
+  --ts-error-color: #ff4d4d;
+}
+
 #transcend-result {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 /* 确保基本样式生效 */
@@ -18,40 +32,36 @@
   font-family: inherit;
 }
 
-/* Copilot 风格按钮组容器 - 不使用 all: initial，直接设置样式 */
+/* Button Group Container */
 #transcend-translate-btn.transcend-button-group {
   position: absolute;
-  z-index: 10000;
+  z-index: 2147483647;
+  /* Max z-index */
   display: flex;
   align-items: center;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  padding: 4px;
-  gap: 0;
+  background: var(--ts-glass-bg);
+  backdrop-filter: blur(12px);
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0, 242, 255, 0.15), 0 4px 12px rgba(0, 0, 0, 0.5);
+  padding: 6px;
+  gap: 4px;
   user-select: none;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  border: 1px solid var(--ts-glass-border);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   margin: 0;
   box-sizing: border-box;
+  transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-/* 暗黑模式 - 按钮组 */
-#transcend-translate-btn.transcend-button-group[data-theme="dark"] {
-  background: #1e1e1e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-}
-
-/* 左侧图标 */
+/* Icon */
 #transcend-translate-btn .transcend-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 8px;
-  border-radius: 6px 0 0 6px;
-  margin: 0;
-  box-sizing: border-box;
+  padding: 6px;
+  border-radius: 8px;
+  margin-right: 4px;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 #transcend-translate-btn .transcend-icon img {
@@ -59,441 +69,267 @@
   object-fit: contain;
   width: 20px;
   height: 20px;
-  margin: 0;
+  filter: drop-shadow(0 0 4px var(--ts-accent-primary));
 }
 
-/* 按钮样式 - 所有按钮默认透明 */
+/* Buttons */
 #transcend-translate-btn .transcend-btn {
   background: transparent;
-  border: none;
-  color: #333;
+  border: 1px solid transparent;
+  color: var(--ts-text-secondary);
   font-size: 13px;
   font-weight: 500;
   padding: 6px 12px;
   cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.15s ease;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-family: inherit;
   white-space: nowrap;
   position: relative;
   margin: 0;
-  box-sizing: border-box;
   line-height: 1.4;
 }
 
-/* 暗黑模式 - 按钮文本 */
-#transcend-translate-btn.transcend-button-group[data-theme="dark"] .transcend-btn {
-  color: #e0e0e0;
-}
-
-/* 按钮之间的分隔线 */
-#transcend-translate-btn .transcend-btn:not(:first-of-type)::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 1px;
-  height: 16px;
-  background: rgba(0, 0, 0, 0.1);
-}
-
-/* 暗黑模式 - 按钮分隔线 */
-#transcend-translate-btn.transcend-button-group[data-theme="dark"] .transcend-btn:not(:first-of-type)::before {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-/* 第一个按钮的左边距 */
-#transcend-translate-btn .transcend-btn:first-of-type {
-  margin-left: 4px;
-}
-
-/* 所有按钮的 hover 效果 - 使用渐变背景 */
 #transcend-translate-btn .transcend-btn:hover {
-  background: linear-gradient(135deg, rgb(77, 163, 236) 0%, rgb(92, 195, 202) 100%);
-  color: white;
+  background: rgba(0, 242, 255, 0.1);
+  color: var(--ts-accent-primary);
+  border-color: rgba(0, 242, 255, 0.3);
+  box-shadow: 0 0 12px rgba(0, 242, 255, 0.1);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(77, 163, 236, 0.3);
 }
 
 #transcend-translate-btn .transcend-btn:active {
   transform: translateY(0);
 }
 
-/* 翻译结果容器样式 - 重新设计 */
+/* Separator removed in this design for cleaner look */
+#transcend-translate-btn .transcend-btn::before {
+  display: none;
+}
+
+/* Result Container */
 #transcend-result {
   position: absolute;
   display: none;
-  z-index: 10001;
+  z-index: 2147483647;
   max-width: 500px;
   min-width: 320px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(77, 163, 236, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--ts-glass-bg);
+  backdrop-filter: blur(16px);
+  border-radius: 16px;
+  box-shadow: var(--ts-glass-shadow), 0 0 0 1px var(--ts-glass-border);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow: hidden;
-  border: 1px solid rgba(77, 163, 236, 0.15);
   box-sizing: border-box;
+  color: var(--ts-text-primary);
 }
 
-/* 暗黑模式 - 结果容器 */
-#transcend-result[data-theme="dark"] {
-  background: #1e1e1e;
-  border: 1px solid rgba(77, 163, 236, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-/* 结果容器头部 - 使用主题色渐变 */
+/* Result Header */
 .transcend-result-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, rgba(77, 163, 236, 0.1) 0%, rgba(92, 195, 202, 0.1) 100%);
-  border-bottom: 1px solid rgba(77, 163, 236, 0.1);
-  margin: 0;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--ts-glass-border);
   width: 100%;
-  box-sizing: border-box;
-}
-
-/* 暗黑模式 - 结果头部 */
-#transcend-result[data-theme="dark"] .transcend-result-header {
-  background: linear-gradient(135deg, rgba(77, 163, 236, 0.15) 0%, rgba(92, 195, 202, 0.15) 100%);
-  border-bottom: 1px solid rgba(77, 163, 236, 0.2);
 }
 
 .transcend-result-header-left {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
+  gap: 10px;
 }
 
 .transcend-result-icon {
-  width: 16px;
-  height: 16px;
-  display: block;
-  object-fit: contain;
-  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  filter: drop-shadow(0 0 4px var(--ts-accent-primary));
 }
 
-.transcend-result-header-left > span {
-  font-size: 13px;
-  font-weight: 500;
-  color: rgb(77, 163, 236);
-  text-transform: none;
-  letter-spacing: 0;
+.transcend-result-header-left>span {
+  font-size: 14px;
+  font-weight: 600;
+  background: linear-gradient(90deg, var(--ts-text-primary), var(--ts-accent-primary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 0.5px;
 }
 
-/* 暗黑模式 - 头部文本颜色保持不变（主题色） */
-
-/* 右侧按钮容器 */
-.transcend-result-header > div,
+/* Header Actions */
 .transcend-result-actions {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   align-items: center;
-  flex-shrink: 0;
-  margin-left: 0;
 }
 
-/* 复制按钮 - 使用主题色 */
+/* Copy Button */
 .transcend-copy-btn {
   cursor: pointer;
-  padding: 4px 10px;
-  background: transparent;
-  border: 1px solid rgba(77, 163, 236, 0.3);
-  border-radius: 4px;
+  padding: 6px 12px;
+  background: rgba(0, 242, 255, 0.1);
+  border: 1px solid rgba(0, 242, 255, 0.2);
+  border-radius: 6px;
   font-size: 11px;
-  font-weight: 500;
-  color: rgb(77, 163, 236);
-  transition: all 0.15s ease;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  white-space: nowrap;
+  font-weight: 600;
+  color: var(--ts-accent-primary);
+  transition: all 0.2s ease;
 }
 
 .transcend-copy-btn:hover {
-  background: linear-gradient(135deg, rgb(77, 163, 236) 0%, rgb(92, 195, 202) 100%);
-  color: white;
-  border-color: transparent;
+  background: rgba(0, 242, 255, 0.2);
+  box-shadow: 0 0 12px rgba(0, 242, 255, 0.2);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(77, 163, 236, 0.3);
 }
 
-.transcend-copy-btn:active {
-  transform: translateY(0);
-}
-
-/* 关闭按钮样式 */
+/* Close Button */
 .transcend-close-btn {
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   background: transparent;
   border: none;
-  border-radius: 4px;
-  color: #666;
-  transition: all 0.15s ease;
+  border-radius: 6px;
+  color: var(--ts-text-secondary);
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-}
-
-.transcend-close-btn svg {
-  width: 16px;
-  height: 16px;
-  display: block;
 }
 
 .transcend-close-btn:hover {
-  background: rgba(0, 0, 0, 0.1);
-  color: #333;
+  background: rgba(255, 77, 77, 0.1);
+  color: var(--ts-error-color);
 }
 
-.transcend-close-btn:active {
-  background: rgba(0, 0, 0, 0.15);
-}
-
-/* 暗黑模式 - 关闭按钮 */
-#transcend-result[data-theme="dark"] .transcend-close-btn {
-  color: #999;
-}
-
-#transcend-result[data-theme="dark"] .transcend-close-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #e0e0e0;
-}
-
-#transcend-result[data-theme="dark"] .transcend-close-btn:active {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-/* 结果内容区域 - 支持富文本 */
+/* Content Area */
 .transcend-result-content {
-  padding: 0 16px;
-  color: #2c3e50;
+  padding: 16px;
+  color: var(--ts-text-primary);
   font-size: 14px;
-  line-height: 1.7;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  white-space: normal;
-  text-align: left;
+  line-height: 1.6;
 }
 
-/* 暗黑模式 - 结果内容 */
-#transcend-result[data-theme="dark"] .transcend-result-content {
-  color: #e0e0e0;
-}
-
-/* 确保富文本元素正确显示 - 只重置必要的属性 */
 .transcend-result-content * {
-  box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: inherit;
 }
 
-/* 富文本支持 */
-.transcend-result-content p {
-  margin: 0 0 12px 0;
-  display: block;
-}
-
-.transcend-result-content p:last-child {
-  margin-bottom: 0;
-}
-
+/* Typography in Content */
 .transcend-result-content strong,
 .transcend-result-content b {
+  color: var(--ts-accent-primary);
   font-weight: 600;
-  color: #1a252f;
-}
-
-/* 暗黑模式 - 强调文本 */
-#transcend-result[data-theme="dark"] .transcend-result-content strong,
-#transcend-result[data-theme="dark"] .transcend-result-content b {
-  color: #ffffff;
-}
-
-.transcend-result-content em,
-.transcend-result-content i {
-  font-style: italic;
 }
 
 .transcend-result-content code {
-  background: rgba(77, 163, 236, 0.1);
+  background: rgba(0, 242, 255, 0.1);
   padding: 2px 6px;
   border-radius: 4px;
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: 'Monaco', monospace;
   font-size: 13px;
-  color: rgb(77, 163, 236);
+  color: var(--ts-accent-primary);
+  border: 1px solid rgba(0, 242, 255, 0.1);
 }
 
 .transcend-result-content pre {
-  background: rgba(77, 163, 236, 0.05);
+  background: rgba(0, 0, 0, 0.3);
   padding: 12px;
-  border-radius: 6px;
-  border-left: 3px solid rgb(77, 163, 236);
+  border-radius: 8px;
+  border: 1px solid var(--ts-glass-border);
   overflow-x: auto;
   margin: 12px 0;
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.transcend-result-content ul,
-.transcend-result-content ol {
-  margin: 12px 0;
-  padding-left: 24px;
-  display: block;
-  list-style-position: outside;
-}
-
-.transcend-result-content ul {
-  list-style-type: disc;
-}
-
-.transcend-result-content ol {
-  list-style-type: decimal;
-}
-
-.transcend-result-content li {
-  margin: 6px 0;
-  display: list-item;
-  list-style-position: outside;
 }
 
 .transcend-result-content a {
-  color: rgb(77, 163, 236);
+  color: var(--ts-accent-primary);
   text-decoration: none;
-  border-bottom: 1px solid rgba(77, 163, 236, 0.3);
-  transition: all 0.15s ease;
+  border-bottom: 1px dashed rgba(0, 242, 255, 0.3);
 }
 
 .transcend-result-content a:hover {
-  color: rgb(92, 195, 202);
-  border-bottom-color: rgb(92, 195, 202);
+  border-bottom-style: solid;
+  text-shadow: 0 0 8px rgba(0, 242, 255, 0.4);
 }
 
 .transcend-result-content blockquote {
-  border-left: 3px solid rgba(77, 163, 236, 0.3);
+  border-left: 3px solid var(--ts-accent-secondary);
   padding-left: 16px;
   margin: 12px 0;
-  color: #555;
-  font-style: italic;
+  color: var(--ts-text-secondary);
+  background: rgba(112, 0, 255, 0.05);
+  padding: 8px 16px;
+  border-radius: 0 8px 8px 0;
 }
 
-/* 暗黑模式 - 引用 */
-#transcend-result[data-theme="dark"] .transcend-result-content blockquote {
-  color: #b0b0b0;
-  border-left-color: rgba(77, 163, 236, 0.5);
-}
-
+/* Headings */
 .transcend-result-content h1,
 .transcend-result-content h2,
-.transcend-result-content h3,
-.transcend-result-content h4,
-.transcend-result-content h5,
-.transcend-result-content h6 {
-  margin: 16px 0 8px 0;
-  font-weight: 600;
-  color: #1a252f;
-  display: block;
+.transcend-result-content h3 {
+  color: var(--ts-text-primary);
+  margin-top: 0;
 }
 
-/* 暗黑模式 - 标题 */
-#transcend-result[data-theme="dark"] .transcend-result-content h1,
-#transcend-result[data-theme="dark"] .transcend-result-content h2,
-#transcend-result[data-theme="dark"] .transcend-result-content h3,
-#transcend-result[data-theme="dark"] .transcend-result-content h4,
-#transcend-result[data-theme="dark"] .transcend-result-content h5,
-#transcend-result[data-theme="dark"] .transcend-result-content h6 {
-  color: #ffffff;
-}
-
-.transcend-result-content h1 { font-size: 20px; }
-.transcend-result-content h2 { font-size: 18px; }
-.transcend-result-content h3 { font-size: 16px; }
-.transcend-result-content h4 { font-size: 15px; }
-.transcend-result-content h5 { font-size: 14px; }
-.transcend-result-content h6 { font-size: 13px; }
-
-/* 加载状态 */
+/* Loading State */
 .transcend-result-loading {
   padding: 16px;
-  color: rgb(77, 163, 236);
+  color: var(--ts-accent-primary);
   font-size: 14px;
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  gap: 12px;
 }
 
 .transcend-result-loading::before {
   content: '';
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(77, 163, 236, 0.2);
-  border-top-color: rgb(77, 163, 236);
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border: 2px solid rgba(0, 242, 255, 0.2);
+  border-top-color: var(--ts-accent-primary);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 1s linear infinite;
+  box-shadow: 0 0 12px rgba(0, 242, 255, 0.2);
   display: inline-block;
+
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* 错误状态 */
+/* Error State */
 .transcend-result-error {
   padding: 16px;
-  color: #e74c3c;
-  font-size: 14px;
-  background: rgba(231, 76, 60, 0.1);
+  color: var(--ts-error-color);
+  background: rgba(255, 77, 77, 0.1);
+  border: 1px solid rgba(255, 77, 77, 0.2);
   border-radius: 8px;
   margin: 12px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  display: block;
+  box-shadow: 0 0 12px rgba(255, 77, 77, 0.1);
 }
 
-/* 音标播放按钮 */
+/* Phonetic Button */
 .transcend-phonetic-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  margin-left: 4px;
-  background: transparent;
-  border: 1px solid rgba(77, 163, 236, 0.3);
-  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  margin-left: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--ts-glass-border);
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 12px;
-  line-height: 1;
-  transition: all 0.15s ease;
-  vertical-align: middle;
+  color: var(--ts-accent-primary);
+  transition: all 0.2s ease;
 }
 
 .transcend-phonetic-btn:hover {
-  background: rgba(77, 163, 236, 0.1);
-  border-color: rgb(77, 163, 236);
-  transform: scale(1.1);
+  background: rgba(0, 242, 255, 0.1);
+  box-shadow: 0 0 8px rgba(0, 242, 255, 0.2);
+  transform: scale(1.05);
 }
 
-.transcend-phonetic-btn:active {
-  transform: scale(0.95);
-}
-
-/* 暗黑模式 - 音标播放按钮 */
-#transcend-result[data-theme="dark"] .transcend-phonetic-btn {
-  border-color: rgba(77, 163, 236, 0.5);
-  color: #e0e0e0;
-}
-
-#transcend-result[data-theme="dark"] .transcend-phonetic-btn:hover {
-  background: rgba(77, 163, 236, 0.2);
-  border-color: rgb(77, 163, 236);
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
