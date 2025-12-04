@@ -27,9 +27,14 @@ export function calculateButtonPosition(
   // 按钮显示在选中文本的下方
   let top = rect.bottom + scrollY + UI_CONFIG.BUTTON_OFFSET.TOP;
 
+  // 确保按钮不超出左边界
+  if (left < scrollX) {
+    left = scrollX + (UI_CONFIG.BUTTON_OFFSET.LEFT || 8);
+  }
+
   // 确保按钮不超出右边界
   if (left + buttonBounds.width > window.innerWidth + scrollX) {
-    left = window.innerWidth + scrollX - buttonBounds.width - UI_CONFIG.BUTTON_OFFSET.RIGHT;
+    left = window.innerWidth + scrollX - buttonBounds.width - (UI_CONFIG.BUTTON_OFFSET.RIGHT || 8);
   }
 
   // 确保按钮不超出下边界
