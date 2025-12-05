@@ -130,7 +130,7 @@ function App() {
             onClick={handleToggleDomainBlock}
             className={`domain-toggle-btn ${isBlocked ? 'blocked' : ''}`}
           >
-            {isBlocked ? '启用按钮组' : '禁用按钮组'}
+            {isBlocked ? '启用' : '禁用'}
           </button>
         </div>
       )}

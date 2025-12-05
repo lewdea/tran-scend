@@ -134,6 +134,12 @@ export class ResultContainer {
    * 流式内容完成后，添加音标播放按钮
    */
   finishStreaming(): void {
+    // 隐藏停止按钮
+    const stopBtn = document.getElementById(ELEMENT_IDS.STOP_BUTTON);
+    if (stopBtn) {
+      stopBtn.style.display = 'none';
+    }
+
     if (!this.currentWord || this.phoneticButtonsAdded) {
       return;
     }
@@ -160,12 +166,6 @@ export class ResultContainer {
       setTimeout(() => {
         this.attachPhoneticButtonListeners(contentDiv);
       }, 0);
-    }
-
-    // 隐藏停止按钮
-    const stopBtn = document.getElementById(ELEMENT_IDS.STOP_BUTTON);
-    if (stopBtn) {
-      stopBtn.style.display = 'none';
     }
   }
 
