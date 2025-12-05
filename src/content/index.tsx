@@ -29,7 +29,11 @@ class ContentApp {
   private buttonHandlers: ButtonHandlers;
   private colorSchemeListener: ColorSchemeListener;
   private currentSelection: Selection | null = null;
-  private isEnabled: boolean = true; // 是否启用按钮组
+  private buttonSettings: { learn: boolean; translate: boolean; check: boolean } = {
+    learn: true,
+    translate: true,
+    check: true,
+  };
 
   constructor() {
     // 初始化组件
@@ -41,10 +45,18 @@ class ContentApp {
     // 检查当前域名是否在黑名单中
     this.checkDomainBlocklist();
 
-    // 监听存储变化，实时更新黑名单状态
+    // 加载按钮设置
+    this.loadButtonSettings();
+
+    // 监听存储变化，实时更新黑名单状态和按钮设置
     chrome.storage.onChanged.addListener((changes, areaName) => {
-      if (areaName === 'local' && changes.blockedDomains) {
-        this.checkDomainBlocklist();
+      if (areaName === 'local') {
+        if (changes.blockedDomains) {
+          this.checkDomainBlocklist();
+        }
+        if (changes.buttonSettings) {
+          this.buttonSettings = changes.buttonSettings.newValue;
+        }
       }
     });
 
@@ -70,6 +82,17 @@ class ContentApp {
 
     // 初始化消息监听
     this.initMessageListener();
+  }
+
+  private async loadButtonSettings(): Promise<void> {
+    try {
+      const result = await chrome.storage.local.get(['buttonSettings']);
+      if (result.buttonSettings) {
+        this.buttonSettings = result.buttonSettings;
+      }
+    } catch {
+      // 默认全开
+    }
   }
 
   private handleSelectionChange(selection: Selection | null): void {
@@ -123,7 +146,8 @@ class ContentApp {
       rect,
       () => this.buttonHandlers.handleLearn(this.currentSelection),
       () => this.buttonHandlers.handleTranslate(this.currentSelection),
-      () => this.buttonHandlers.handleCheck(this.currentSelection)
+      () => this.buttonHandlers.handleCheck(this.currentSelection),
+      this.buttonSettings
     );
   }
 

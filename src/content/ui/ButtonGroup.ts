@@ -18,9 +18,7 @@ export class ButtonGroup {
     const icon = this.createIcon();
     container.appendChild(icon);
 
-    // 创建按钮
-    const buttons = this.createButtons();
-    buttons.forEach(btn => container.appendChild(btn));
+    // 按钮将在 show 方法中根据配置动态添加
 
     this.container = container;
     return container;
@@ -29,13 +27,13 @@ export class ButtonGroup {
   private createIcon(): HTMLDivElement {
     const icon = document.createElement('div');
     icon.className = CSS_CLASSES.ICON;
-    
+
     const iconImg = document.createElement('img');
     iconImg.src = chrome.runtime.getURL('icons/icon32.png');
     iconImg.alt = 'Tran-scend';
     iconImg.style.width = '20px';
     iconImg.style.height = '20px';
-    
+
     icon.appendChild(iconImg);
     return icon;
   }
@@ -65,34 +63,50 @@ export class ButtonGroup {
     return button;
   }
 
-  show(selectionRect: DOMRect, onLearnClick: () => void, onTranslateClick: () => void, onCheckClick: () => void): void {
+  show(
+    selectionRect: DOMRect,
+    onLearnClick: () => void,
+    onTranslateClick: () => void,
+    onCheckClick: () => void,
+    settings: { learn: boolean; translate: boolean; check: boolean } = { learn: true, translate: true, check: true }
+  ): void {
     if (!this.container) {
       this.container = this.create();
       document.body.appendChild(this.container);
-      
-      // 设置按钮点击事件（只在创建时设置一次）
-      const buttons = this.container.querySelectorAll(`.${CSS_CLASSES.BUTTON}`);
-      if (buttons[0]) {
-        buttons[0].addEventListener('click', () => {
-          onLearnClick();
-        });
-      }
-      if (buttons[1]) {
-        buttons[1].addEventListener('click', () => {
-          onTranslateClick();
-        });
-      }
-      if (buttons[2]) {
-        buttons[2].addEventListener('click', () => {
-          onCheckClick();
-        });
-      }
     } else {
-      // 更新颜色模式（可能已经变化）
+      // 更新颜色模式
       applyColorScheme(this.container);
     }
 
-    // 计算并设置位置（使用传入的 selectionRect）
+    // 清空现有按钮（保留图标）
+    const icon = this.container.querySelector(`.${CSS_CLASSES.ICON}`);
+    this.container.innerHTML = '';
+    if (icon) {
+      this.container.appendChild(icon);
+    } else {
+      this.container.appendChild(this.createIcon());
+    }
+
+    // 根据设置添加按钮
+    if (settings.learn) {
+      const learnBtn = this.createButton(TEXT.BUTTONS.LEARN);
+      learnBtn.addEventListener('click', onLearnClick);
+      this.container.appendChild(learnBtn);
+    }
+
+    if (settings.translate) {
+      const translateBtn = this.createButton(TEXT.BUTTONS.TRANSLATE);
+      translateBtn.addEventListener('click', onTranslateClick);
+      this.container.appendChild(translateBtn);
+    }
+
+    if (settings.check) {
+      const checkBtn = this.createButton(TEXT.BUTTONS.CHECK);
+      checkBtn.addEventListener('click', onCheckClick);
+      this.container.appendChild(checkBtn);
+    }
+
+    // 计算并设置位置
     const rect = selectionRect;
 
     // 临时显示以获取尺寸

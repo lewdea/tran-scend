@@ -3,7 +3,13 @@ import { createRoot } from 'react-dom/client';
 import { applyColorScheme } from '../utils/colorScheme';
 import './App.css';
 
-type TabType = 'api' | 'domains';
+type TabType = 'api' | 'domains' | 'buttons';
+
+interface ButtonSettings {
+  learn: boolean;
+  translate: boolean;
+  check: boolean;
+}
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabType>('api');
@@ -11,6 +17,11 @@ function App() {
   const [model, setModel] = useState<string>('gpt-4o-mini');
   const [blockedDomains, setBlockedDomains] = useState<string[]>([]);
   const [newDomain, setNewDomain] = useState<string>('');
+  const [buttonSettings, setButtonSettings] = useState<ButtonSettings>({
+    learn: true,
+    translate: true,
+    check: true,
+  });
   const [status, setStatus] = useState<{ show: boolean; type: 'success' | 'error' | ''; message: string }>({
     show: false,
     type: '',
@@ -19,7 +30,7 @@ function App() {
 
   // 加载已保存的设置
   useEffect(() => {
-    chrome.storage.local.get(['apiKey', 'model', 'blockedDomains'], (result) => {
+    chrome.storage.local.get(['apiKey', 'model', 'blockedDomains', 'buttonSettings'], (result) => {
       if (result.apiKey) {
         setApiKey(result.apiKey);
       }
@@ -28,6 +39,9 @@ function App() {
       }
       if (result.blockedDomains && Array.isArray(result.blockedDomains)) {
         setBlockedDomains(result.blockedDomains);
+      }
+      if (result.buttonSettings) {
+        setButtonSettings(result.buttonSettings);
       }
     });
 
@@ -46,6 +60,11 @@ function App() {
       };
     }
   }, []);
+
+  // 切换 Tab 时清除状态
+  useEffect(() => {
+    setStatus({ show: false, type: '', message: '' });
+  }, [activeTab]);
 
   // 保存 API 设置
   const handleSaveApiConfig = async () => {
@@ -68,6 +87,40 @@ function App() {
       setTimeout(() => {
         setStatus({ show: false, type: '', message: '' });
       }, 2000);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setStatus({ show: true, type: 'error', message: '保存失败：' + errorMessage });
+    }
+  };
+
+  // 切换按钮状态（自动保存）
+  const toggleButton = async (key: keyof ButtonSettings) => {
+    // 如果当前是开启状态，且尝试关闭
+    if (buttonSettings[key]) {
+      // 检查是否是最后一个开启的按钮
+      const enabledCount = Object.values(buttonSettings).filter(Boolean).length;
+      if (enabledCount <= 1) {
+        setStatus({ show: true, type: 'error', message: '请至少保留一个功能按钮' });
+        return;
+      }
+    }
+
+    const newSettings = {
+      ...buttonSettings,
+      [key]: !buttonSettings[key]
+    };
+
+    setButtonSettings(newSettings);
+
+    // 如果之前有错误提示，操作成功后清除
+    if (status.show) {
+      setStatus({ show: false, type: '', message: '' });
+    }
+
+    try {
+      await chrome.storage.local.set({ buttonSettings: newSettings });
+      // 不显示成功提示，因为是自动保存，避免打扰用户
+      // 除非出错才提示
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       setStatus({ show: true, type: 'error', message: '保存失败：' + errorMessage });
@@ -145,6 +198,14 @@ function App() {
           </button>
           <button
             type="button"
+            className={`sidebar-item ${activeTab === 'buttons' ? 'active' : ''}`}
+            onClick={() => setActiveTab('buttons')}
+          >
+            <span className="sidebar-icon">🔘</span>
+            <span className="sidebar-text">按钮配置</span>
+          </button>
+          <button
+            type="button"
             className={`sidebar-item ${activeTab === 'domains' ? 'active' : ''}`}
             onClick={() => setActiveTab('domains')}
           >
@@ -187,6 +248,71 @@ function App() {
               </div>
 
               <button onClick={handleSaveApiConfig} className="btn-primary">保存 API 设置</button>
+
+              {status.show && (
+                <div className={`status ${status.type}`}>
+                  {status.message}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'buttons' && (
+            <div className="content-panel">
+              <h3>按钮配置</h3>
+              <p className="section-description">
+                选择在划词时显示的浮动按钮。您可以根据需要启用或禁用特定功能，但至少需要保留一个。
+              </p>
+
+              <div className="button-config-list">
+                <div
+                  className={`config-item ${buttonSettings.learn ? 'active' : ''}`}
+                  onClick={() => toggleButton('learn')}
+                >
+                  <div className="config-item-icon">💡</div>
+                  <div className="config-item-info">
+                    <div className="config-item-title">Learn (学习)</div>
+                    <div className="config-item-desc">解释单词或短语的含义、用法和例句</div>
+                  </div>
+                  <div className="config-toggle">
+                    <div className="toggle-track">
+                      <div className="toggle-thumb"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  className={`config-item ${buttonSettings.translate ? 'active' : ''}`}
+                  onClick={() => toggleButton('translate')}
+                >
+                  <div className="config-item-icon">🌐</div>
+                  <div className="config-item-info">
+                    <div className="config-item-title">Translate (翻译)</div>
+                    <div className="config-item-desc">将选中的文本翻译成中文</div>
+                  </div>
+                  <div className="config-toggle">
+                    <div className="toggle-track">
+                      <div className="toggle-thumb"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  className={`config-item ${buttonSettings.check ? 'active' : ''}`}
+                  onClick={() => toggleButton('check')}
+                >
+                  <div className="config-item-icon">🔍</div>
+                  <div className="config-item-info">
+                    <div className="config-item-title">Check (检查)</div>
+                    <div className="config-item-desc">检查语法错误并提供修改建议</div>
+                  </div>
+                  <div className="config-toggle">
+                    <div className="toggle-track">
+                      <div className="toggle-thumb"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {status.show && (
                 <div className={`status ${status.type}`}>
