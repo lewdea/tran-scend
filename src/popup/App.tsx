@@ -16,7 +16,6 @@ function App() {
 
   // 加载已保存的设置并应用颜色模式
   useEffect(() => {
-
     // 获取当前标签页域名
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]?.url) {
@@ -51,7 +50,6 @@ function App() {
       };
     }
   }, []);
-
 
   // 打开管理页面
   const handleOpenOptions = () => {

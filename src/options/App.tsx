@@ -22,6 +22,8 @@ function App() {
     translate: true,
     check: true,
   });
+  const [domainButtonSettings, setDomainButtonSettings] = useState<{ [domain: string]: ButtonSettings }>({});
+  const [newOverrideDomain, setNewOverrideDomain] = useState<string>('');
   const [status, setStatus] = useState<{ show: boolean; type: 'success' | 'error' | ''; message: string }>({
     show: false,
     type: '',
@@ -30,7 +32,7 @@ function App() {
 
   // 加载已保存的设置
   useEffect(() => {
-    chrome.storage.local.get(['apiKey', 'model', 'blockedDomains', 'buttonSettings'], (result) => {
+    chrome.storage.local.get(['apiKey', 'model', 'blockedDomains', 'buttonSettings', 'domainButtonSettings'], (result) => {
       if (result.apiKey) {
         setApiKey(result.apiKey);
       }
@@ -42,6 +44,9 @@ function App() {
       }
       if (result.buttonSettings) {
         setButtonSettings(result.buttonSettings);
+      }
+      if (result.domainButtonSettings) {
+        setDomainButtonSettings(result.domainButtonSettings);
       }
     });
 
@@ -94,37 +99,118 @@ function App() {
   };
 
   // 切换按钮状态（自动保存）
-  const toggleButton = async (key: keyof ButtonSettings) => {
-    // 如果当前是开启状态，且尝试关闭
-    if (buttonSettings[key]) {
-      // 检查是否是最后一个开启的按钮
-      const enabledCount = Object.values(buttonSettings).filter(Boolean).length;
-      if (enabledCount <= 1) {
-        setStatus({ show: true, type: 'error', message: '请至少保留一个功能按钮' });
+  const toggleButton = async (key: keyof ButtonSettings, domain?: string) => {
+    let newSettings: ButtonSettings;
+    let newDomainSettings = { ...domainButtonSettings };
+
+    if (domain) {
+      // 针对特定域名的设置
+      const currentSettings = newDomainSettings[domain] || { learn: true, translate: true, check: true };
+
+      // 如果当前是开启状态，且尝试关闭
+      if (currentSettings[key]) {
+        // 检查是否是最后一个开启的按钮
+        const enabledCount = Object.values(currentSettings).filter(Boolean).length;
+        if (enabledCount <= 1) {
+          setStatus({ show: true, type: 'error', message: '请至少保留一个功能按钮' });
+          return;
+        }
+      }
+
+      newSettings = {
+        ...currentSettings,
+        [key]: !currentSettings[key]
+      };
+      newDomainSettings[domain] = newSettings;
+      setDomainButtonSettings(newDomainSettings);
+
+      try {
+        await chrome.storage.local.set({ domainButtonSettings: newDomainSettings });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        setStatus({ show: true, type: 'error', message: '保存失败：' + errorMessage });
+        return;
+      }
+    } else {
+      // 全局设置
+      if (buttonSettings[key]) {
+        const enabledCount = Object.values(buttonSettings).filter(Boolean).length;
+        if (enabledCount <= 1) {
+          setStatus({ show: true, type: 'error', message: '请至少保留一个功能按钮' });
+          return;
+        }
+      }
+
+      newSettings = {
+        ...buttonSettings,
+        [key]: !buttonSettings[key]
+      };
+      setButtonSettings(newSettings);
+
+      try {
+        await chrome.storage.local.set({ buttonSettings: newSettings });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        setStatus({ show: true, type: 'error', message: '保存失败：' + errorMessage });
         return;
       }
     }
-
-    const newSettings = {
-      ...buttonSettings,
-      [key]: !buttonSettings[key]
-    };
-
-    setButtonSettings(newSettings);
 
     // 如果之前有错误提示，操作成功后清除
     if (status.show) {
       setStatus({ show: false, type: '', message: '' });
     }
+  };
 
-    try {
-      await chrome.storage.local.set({ buttonSettings: newSettings });
-      // 不显示成功提示，因为是自动保存，避免打扰用户
-      // 除非出错才提示
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      setStatus({ show: true, type: 'error', message: '保存失败：' + errorMessage });
+  // 添加域名覆盖
+  const handleAddOverrideDomain = async () => {
+    const trimmedDomain = newOverrideDomain.trim().toLowerCase();
+
+    if (!trimmedDomain) {
+      setStatus({ show: true, type: 'error', message: '请输入域名' });
+      return;
     }
+
+    // 验证域名格式
+    const domainRegex = /^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$/;
+    if (!domainRegex.test(trimmedDomain)) {
+      setStatus({ show: true, type: 'error', message: '域名格式不正确' });
+      return;
+    }
+
+    if (domainButtonSettings[trimmedDomain]) {
+      setStatus({ show: true, type: 'error', message: '该域名已配置覆盖规则' });
+      return;
+    }
+
+    // 默认继承全局设置
+    const newDomainSettings = {
+      ...domainButtonSettings,
+      [trimmedDomain]: { ...buttonSettings }
+    };
+
+    await chrome.storage.local.set({ domainButtonSettings: newDomainSettings });
+    setDomainButtonSettings(newDomainSettings);
+    setNewOverrideDomain('');
+    setStatus({ show: true, type: 'success', message: '✓ 域名覆盖规则已添加' });
+
+    setTimeout(() => {
+      setStatus({ show: false, type: '', message: '' });
+    }, 2000);
+  };
+
+  // 移除域名覆盖
+  const handleRemoveOverrideDomain = async (domain: string) => {
+    const newDomainSettings = { ...domainButtonSettings };
+    delete newDomainSettings[domain];
+
+    await chrome.storage.local.set({ domainButtonSettings: newDomainSettings });
+    setDomainButtonSettings(newDomainSettings);
+    setStatus({ show: true, type: 'success', message: '✓ 域名覆盖规则已移除' });
+
+    setTimeout(() => {
+      setStatus({ show: false, type: '', message: '' });
+    }, 2000);
   };
 
   // 添加域名到黑名单
@@ -202,7 +288,7 @@ function App() {
             onClick={() => setActiveTab('buttons')}
           >
             <span className="sidebar-icon">🔘</span>
-            <span className="sidebar-text">按钮配置</span>
+            <span className="sidebar-text">功能配置</span>
           </button>
           <button
             type="button"
@@ -259,7 +345,7 @@ function App() {
 
           {activeTab === 'buttons' && (
             <div className="content-panel">
-              <h3>按钮配置</h3>
+              <h3>功能配置</h3>
               <p className="section-description">
                 选择在划词时显示的浮动按钮。您可以根据需要启用或禁用特定功能，但至少需要保留一个。
               </p>
@@ -313,6 +399,72 @@ function App() {
                   </div>
                 </div>
               </div>
+
+              <div className="divider"></div>
+
+              <h4 className="subsection-title">域名特定设置</h4>
+              <p className="section-description">
+                为特定域名设置不同的按钮显示规则。
+              </p>
+
+              <div className="form-group">
+                <div className="input-group">
+                  <input
+                    type="text"
+                    value={newOverrideDomain}
+                    onChange={(e) => setNewOverrideDomain(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleAddOverrideDomain();
+                      }
+                    }}
+                    placeholder="example.com"
+                  />
+                  <button onClick={handleAddOverrideDomain} className="btn-primary-inline">添加</button>
+                </div>
+              </div>
+
+              {Object.keys(domainButtonSettings).length > 0 && (
+                <div className="domain-overrides-list">
+                  {Object.entries(domainButtonSettings).map(([domain, settings]) => (
+                    <div key={domain} className="domain-override-item">
+                      <div className="domain-header">
+                        <span className="domain-name">{domain}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveOverrideDomain(domain)}
+                          className="btn-remove-text"
+                        >
+                          移除
+                        </button>
+                      </div>
+                      <div className="mini-toggles">
+                        <div
+                          className={`mini-toggle ${settings.learn ? 'active' : ''}`}
+                          onClick={() => toggleButton('learn', domain)}
+                          title="Learn"
+                        >
+                          💡
+                        </div>
+                        <div
+                          className={`mini-toggle ${settings.translate ? 'active' : ''}`}
+                          onClick={() => toggleButton('translate', domain)}
+                          title="Translate"
+                        >
+                          🌐
+                        </div>
+                        <div
+                          className={`mini-toggle ${settings.check ? 'active' : ''}`}
+                          onClick={() => toggleButton('check', domain)}
+                          title="Check"
+                        >
+                          🔍
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {status.show && (
                 <div className={`status ${status.type}`}>

@@ -34,6 +34,9 @@ class ContentApp {
     translate: true,
     check: true,
   };
+  private domainButtonSettings: { [domain: string]: { learn: boolean; translate: boolean; check: boolean } } = {};
+
+  private isEnabled: boolean = true;
 
   constructor() {
     // 初始化组件
@@ -57,10 +60,13 @@ class ContentApp {
         if (changes.buttonSettings) {
           this.buttonSettings = changes.buttonSettings.newValue;
         }
+        if (changes.domainButtonSettings) {
+          this.domainButtonSettings = changes.domainButtonSettings.newValue;
+        }
       }
     });
 
-    // 初始化监听器（它们在构造函数中会自动开始工作）
+    // 初始化监听器
     new ClickListener(() => this.hideButtonGroup());
     new ScrollListener(() => this.hideButtonGroup());
     new SelectionListener((selection) => {
@@ -86,9 +92,12 @@ class ContentApp {
 
   private async loadButtonSettings(): Promise<void> {
     try {
-      const result = await chrome.storage.local.get(['buttonSettings']);
+      const result = await chrome.storage.local.get(['buttonSettings', 'domainButtonSettings']);
       if (result.buttonSettings) {
         this.buttonSettings = result.buttonSettings;
+      }
+      if (result.domainButtonSettings) {
+        this.domainButtonSettings = result.domainButtonSettings;
       }
     } catch {
       // 默认全开
@@ -142,12 +151,21 @@ class ContentApp {
     const range = windowSelection.getRangeAt(0);
     const rect = range.getBoundingClientRect();
 
+    // 确定当前使用的设置
+    let effectiveSettings = this.buttonSettings;
+    const currentDomain = window.location.hostname.replace(/^www\./, '').toLowerCase();
+
+    // 检查是否有域名特定的设置
+    if (this.domainButtonSettings && this.domainButtonSettings[currentDomain]) {
+      effectiveSettings = this.domainButtonSettings[currentDomain];
+    }
+
     this.buttonGroup.show(
       rect,
       () => this.buttonHandlers.handleLearn(this.currentSelection),
       () => this.buttonHandlers.handleTranslate(this.currentSelection),
       () => this.buttonHandlers.handleCheck(this.currentSelection),
-      this.buttonSettings
+      effectiveSettings
     );
   }
 
