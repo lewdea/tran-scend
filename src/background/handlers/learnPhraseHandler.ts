@@ -11,7 +11,8 @@ import { buildLearnPhrasePrompt } from '../prompts/phrasePrompt';
  */
 export async function handleLearnPhrase(
   request: LearnPhraseRequest,
-  tabId: number
+  tabId: number,
+  signal?: AbortSignal
 ): Promise<void> {
   if (!tabId) {
     throw new Error('No tabId provided');
@@ -23,7 +24,7 @@ export async function handleLearnPhrase(
     messages: [
       {
         role: 'system',
-        content: 'You are an expert English teacher and translator. Provide accurate translations and helpful explanations for English phrases and sentences in Chinese.',
+        content: 'You are an expert English teacher. You explain English phrases and sentences in a clear, structured way for Chinese learners.',
       },
       {
         role: 'user',
@@ -33,9 +34,9 @@ export async function handleLearnPhrase(
     temperature: 0.7,
     maxTokens: API_CONFIG.MAX_TOKENS.PHRASE,
     stream: true,
+    signal,
   });
 
   const handlers = createStreamHandlers(tabId);
-  await processStreamResponse(response, tabId, handlers);
+  await processStreamResponse(response, tabId, handlers, signal);
 }
-

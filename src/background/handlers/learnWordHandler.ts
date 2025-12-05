@@ -11,7 +11,8 @@ import { buildLearnWordPrompt } from '../prompts/wordPrompt';
  */
 export async function handleLearnWord(
   request: LearnWordRequest,
-  tabId: number
+  tabId: number,
+  signal?: AbortSignal
 ): Promise<void> {
   if (!tabId) {
     throw new Error('No tabId provided');
@@ -23,7 +24,7 @@ export async function handleLearnWord(
     messages: [
       {
         role: 'system',
-        content: 'You are an expert English teacher and linguist. Provide detailed, structured explanations of English words in Chinese, including pronunciation, meanings, etymology, and usage examples.',
+        content: 'You are an expert English teacher. You explain English words in a clear, structured way for Chinese learners.',
       },
       {
         role: 'user',
@@ -33,9 +34,9 @@ export async function handleLearnWord(
     temperature: 0.7,
     maxTokens: API_CONFIG.MAX_TOKENS.WORD,
     stream: true,
+    signal,
   });
 
   const handlers = createStreamHandlers(tabId);
-  await processStreamResponse(response, tabId, handlers);
+  await processStreamResponse(response, tabId, handlers, signal);
 }
-

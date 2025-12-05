@@ -34,7 +34,7 @@ class ContentApp {
   constructor() {
     // 初始化组件
     this.buttonGroup = new ButtonGroup();
-    this.resultContainer = new ResultContainer();
+    this.resultContainer = new ResultContainer(() => this.stopStreaming());
     this.messageHandler = new MessageHandler(this.resultContainer);
     this.colorSchemeListener = new ColorSchemeListener();
 
@@ -125,6 +125,11 @@ class ContentApp {
       () => this.buttonHandlers.handleTranslate(this.currentSelection),
       () => this.buttonHandlers.handleCheck(this.currentSelection)
     );
+  }
+
+  private stopStreaming(): void {
+    chrome.runtime.sendMessage({ action: MESSAGE_ACTIONS.STOP_STREAMING });
+    this.resultContainer.finishStreaming();
   }
 
   private hideButtonGroup(): void {

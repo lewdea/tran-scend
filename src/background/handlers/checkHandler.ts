@@ -11,7 +11,8 @@ import { buildCheckPrompt } from '../prompts/checkPrompt';
  */
 export async function handleCheck(
   request: CheckRequest,
-  tabId: number
+  tabId: number,
+  signal?: AbortSignal
 ): Promise<void> {
   if (!tabId) {
     throw new Error('No tabId provided');
@@ -23,19 +24,19 @@ export async function handleCheck(
     messages: [
       {
         role: 'system',
-        content: 'You are an expert English language editor and native speaker consultant. You evaluate English expressions for clarity and naturalness, providing detailed feedback and the most idiomatic alternatives.',
+        content: 'You are an expert English editor and proofreader. You check English text for grammar, spelling, and style issues, providing clear explanations and corrections.',
       },
       {
         role: 'user',
         content: prompt,
       },
     ],
-    temperature: 0.7,
+    temperature: 0.3,
     maxTokens: API_CONFIG.MAX_TOKENS.CHECK,
     stream: true,
+    signal,
   });
 
   const handlers = createCheckHandlers(tabId);
-  await processStreamResponse(response, tabId, handlers);
+  await processStreamResponse(response, tabId, handlers, signal);
 }
-

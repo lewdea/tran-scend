@@ -11,7 +11,8 @@ import { buildTranslatePrompt } from '../prompts/translatePrompt';
  */
 export async function handleTranslate(
   request: TranslateRequest,
-  tabId: number
+  tabId: number,
+  signal?: AbortSignal
 ): Promise<void> {
   if (!tabId) {
     throw new Error('No tabId provided');
@@ -33,9 +34,10 @@ export async function handleTranslate(
     temperature: 0.7,
     maxTokens: API_CONFIG.MAX_TOKENS.TRANSLATION,
     stream: true,
+    signal,
   });
 
   const handlers = createTranslateHandlers(tabId);
-  await processStreamResponse(response, tabId, handlers);
+  await processStreamResponse(response, tabId, handlers, signal);
 }
 

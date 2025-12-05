@@ -11,6 +11,11 @@ export class ResultContainer {
   private accumulatedContent: string = '';
   private currentWord: string = ''; // 当前学习的单词
   private phoneticButtonsAdded: boolean = false; // 是否已添加音标按钮
+  private onStop: () => void;
+
+  constructor(onStop?: () => void) {
+    this.onStop = onStop || (() => { });
+  }
 
   create(): HTMLDivElement {
     const container = document.createElement('div');
@@ -39,7 +44,7 @@ export class ResultContainer {
 
     // 添加事件监听
     this.attachEventListeners();
-    
+
     // 添加音标播放按钮（只在非流式显示时）
     if (word) {
       const contentDiv = this.container.querySelector(`.${CSS_CLASSES.RESULT_CONTENT}`) as HTMLDivElement;
@@ -71,6 +76,12 @@ export class ResultContainer {
     this.container.style.setProperty('left', `${left}px`);
     this.container.style.setProperty('top', `${top}px`);
     this.container.style.setProperty('visibility', 'visible');
+
+    // 显示停止按钮
+    const stopBtn = document.getElementById(ELEMENT_IDS.STOP_BUTTON);
+    if (stopBtn) {
+      stopBtn.style.display = 'inline-block';
+    }
   }
 
   appendChunk(content: string, selection: Selection | null, word?: string): void {
@@ -144,11 +155,17 @@ export class ResultContainer {
       this.accumulatedContent = contentWithButtons;
       contentDiv.innerHTML = this.accumulatedContent;
       this.phoneticButtonsAdded = true;
-      
+
       // 添加事件监听
       setTimeout(() => {
         this.attachPhoneticButtonListeners(contentDiv);
       }, 0);
+    }
+
+    // 隐藏停止按钮
+    const stopBtn = document.getElementById(ELEMENT_IDS.STOP_BUTTON);
+    if (stopBtn) {
+      stopBtn.style.display = 'none';
     }
   }
 
@@ -178,6 +195,7 @@ export class ResultContainer {
           <span>${headerText}</span>
         </div>
         <div class="${CSS_CLASSES.RESULT_ACTIONS}">
+          <span class="${CSS_CLASSES.STOP_BUTTON}" id="${ELEMENT_IDS.STOP_BUTTON}" style="display: none;">${TEXT.ACTIONS.STOP}</span>
           <span class="${CSS_CLASSES.COPY_BUTTON}" id="${ELEMENT_IDS.COPY_BUTTON}">${TEXT.ACTIONS.COPY}</span>
           <span class="${CSS_CLASSES.CLOSE_BUTTON}" id="${ELEMENT_IDS.CLOSE_BUTTON}">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -198,6 +216,7 @@ export class ResultContainer {
         closeBtn.setAttribute('data-listener', 'true');
         closeBtn.addEventListener('click', (e) => {
           e.stopPropagation();
+          this.onStop();
           this.hide();
         });
       }
@@ -217,6 +236,16 @@ export class ResultContainer {
               }, 1500);
             }
           }
+        });
+      }
+
+      // 停止按钮
+      const stopBtn = document.getElementById(ELEMENT_IDS.STOP_BUTTON);
+      if (stopBtn && !stopBtn.hasAttribute('data-listener')) {
+        stopBtn.setAttribute('data-listener', 'true');
+        stopBtn.addEventListener('click', () => {
+          this.onStop();
+          stopBtn.style.display = 'none';
         });
       }
     }, 0);

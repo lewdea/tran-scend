@@ -5,6 +5,7 @@ export const ELEMENT_IDS = {
   RESULT_CONTAINER: 'transcend-result',
   COPY_BUTTON: 'transcend-copy-btn',
   CLOSE_BUTTON: 'transcend-close-btn',
+  STOP_BUTTON: 'transcend-stop-btn',
 } as const;
 
 export const CSS_CLASSES = {
@@ -16,6 +17,7 @@ export const CSS_CLASSES = {
   RESULT_ACTIONS: 'transcend-result-actions',
   COPY_BUTTON: 'transcend-copy-btn',
   CLOSE_BUTTON: 'transcend-close-btn',
+  STOP_BUTTON: 'transcend-stop-btn',
   RESULT_LOADING: 'transcend-result-loading',
   RESULT_ERROR: 'transcend-result-error',
 } as const;
@@ -34,6 +36,7 @@ export const MESSAGE_ACTIONS = {
   CHECK_CHUNK: 'check-chunk',
   CHECK_DONE: 'check-done',
   CHECK_ERROR: 'check-error',
+  STOP_STREAMING: 'stop-streaming',
 } as const;
 
 export const TEXT = {
@@ -57,6 +60,7 @@ export const TEXT = {
   ACTIONS: {
     COPY: '复制',
     COPIED: '✓ 已复制',
+    STOP: '停止',
   },
   ERROR: {
     API_FAILED: 'API 请求失败',

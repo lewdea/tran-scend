@@ -16,8 +16,30 @@ import { handleTranslate } from './handlers/translateHandler';
 import { handleCheck } from './handlers/checkHandler';
 import { sendMessageToTab } from './api/streaming';
 
+// 活跃请求映射 (tabId -> AbortController)
+const activeRequests = new Map<number, AbortController>();
+
+// 终止指定标签页的请求
+function abortRequest(tabId: number) {
+  const controller = activeRequests.get(tabId);
+  if (controller) {
+    controller.abort();
+    activeRequests.delete(tabId);
+  }
+}
+
 // 消息监听器
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  // 停止流式输出请求
+  if (request.action === 'stop-streaming') {
+    const tabId = sender.tab?.id;
+    if (tabId) {
+      abortRequest(tabId);
+      sendResponse({ success: true });
+    }
+    return true;
+  }
+
   // 旧版翻译请求（保留兼容性）
   if (request.action === MESSAGE_ACTIONS.TRANSLATE && 'sourceLang' in request) {
     handleTranslation(request as TranslationRequest)
@@ -38,16 +60,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       return false;
     }
 
+    // 终止之前的请求
+    abortRequest(tabId);
+    const controller = new AbortController();
+    activeRequests.set(tabId, controller);
+
     // 立即响应，表示消息已接收
     sendResponse({ success: true });
-    
+
     // 异步处理流式响应
-    handleTranslate(request as TranslateRequest, tabId).catch((error) => {
-      sendMessageToTab(tabId, {
-        action: MESSAGE_ACTIONS.TRANSLATE_ERROR,
-        error: error instanceof Error ? error.message : 'Unknown error',
+    handleTranslate(request as TranslateRequest, tabId, controller.signal)
+      .catch((error) => {
+        if (error.name !== 'AbortError') {
+          sendMessageToTab(tabId, {
+            action: MESSAGE_ACTIONS.TRANSLATE_ERROR,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
+      })
+      .finally(() => {
+        if (activeRequests.get(tabId) === controller) {
+          activeRequests.delete(tabId);
+        }
       });
-    });
     return true; // 保持消息通道开启
   }
 
@@ -58,16 +93,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       return false;
     }
 
+    // 终止之前的请求
+    abortRequest(tabId);
+    const controller = new AbortController();
+    activeRequests.set(tabId, controller);
+
     // 立即响应，表示消息已接收
     sendResponse({ success: true });
-    
+
     // 异步处理流式响应
-    handleLearnWord(request as LearnWordRequest, tabId).catch((error) => {
-      sendMessageToTab(tabId, {
-        action: MESSAGE_ACTIONS.LEARN_WORD_ERROR,
-        error: error instanceof Error ? error.message : 'Unknown error',
+    handleLearnWord(request as LearnWordRequest, tabId, controller.signal)
+      .catch((error) => {
+        if (error.name !== 'AbortError') {
+          sendMessageToTab(tabId, {
+            action: MESSAGE_ACTIONS.LEARN_WORD_ERROR,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
+      })
+      .finally(() => {
+        if (activeRequests.get(tabId) === controller) {
+          activeRequests.delete(tabId);
+        }
       });
-    });
     return true; // 保持消息通道开启
   }
 
@@ -78,16 +126,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       return false;
     }
 
+    // 终止之前的请求
+    abortRequest(tabId);
+    const controller = new AbortController();
+    activeRequests.set(tabId, controller);
+
     // 立即响应，表示消息已接收
     sendResponse({ success: true });
-    
+
     // 异步处理流式响应
-    handleLearnPhrase(request as LearnPhraseRequest, tabId).catch((error) => {
-      sendMessageToTab(tabId, {
-        action: MESSAGE_ACTIONS.LEARN_WORD_ERROR,
-        error: error instanceof Error ? error.message : 'Unknown error',
+    handleLearnPhrase(request as LearnPhraseRequest, tabId, controller.signal)
+      .catch((error) => {
+        if (error.name !== 'AbortError') {
+          sendMessageToTab(tabId, {
+            action: MESSAGE_ACTIONS.LEARN_WORD_ERROR,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
+      })
+      .finally(() => {
+        if (activeRequests.get(tabId) === controller) {
+          activeRequests.delete(tabId);
+        }
       });
-    });
     return true; // 保持消息通道开启
   }
 
@@ -98,16 +159,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       return false;
     }
 
+    // 终止之前的请求
+    abortRequest(tabId);
+    const controller = new AbortController();
+    activeRequests.set(tabId, controller);
+
     // 立即响应，表示消息已接收
     sendResponse({ success: true });
-    
+
     // 异步处理流式响应
-    handleCheck(request as CheckRequest, tabId).catch((error) => {
-      sendMessageToTab(tabId, {
-        action: MESSAGE_ACTIONS.CHECK_ERROR,
-        error: error instanceof Error ? error.message : 'Unknown error',
+    handleCheck(request as CheckRequest, tabId, controller.signal)
+      .catch((error) => {
+        if (error.name !== 'AbortError') {
+          sendMessageToTab(tabId, {
+            action: MESSAGE_ACTIONS.CHECK_ERROR,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
+      })
+      .finally(() => {
+        if (activeRequests.get(tabId) === controller) {
+          activeRequests.delete(tabId);
+        }
       });
-    });
     return true; // 保持消息通道开启
   }
 

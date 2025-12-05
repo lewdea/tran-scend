@@ -15,7 +15,8 @@ export interface StreamChunkHandler {
 export async function processStreamResponse(
   response: Response,
   _tabId: number,
-  handlers: StreamChunkHandler
+  handlers: StreamChunkHandler,
+  signal?: AbortSignal
 ): Promise<void> {
   const reader = response.body?.getReader();
   const decoder = new TextDecoder();
@@ -28,6 +29,11 @@ export async function processStreamResponse(
 
   try {
     while (true) {
+      if (signal?.aborted) {
+        reader.cancel();
+        break;
+      }
+
       const { done, value } = await reader.read();
       if (done) {
         handlers.onDone();
@@ -59,7 +65,18 @@ export async function processStreamResponse(
       }
     }
   } catch (error) {
+    // 如果是由于中止引起的错误，忽略它
+    if (signal?.aborted) {
+      return;
+    }
+
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+    // 检查错误消息是否包含 abort 相关的关键词
+    if (errorMessage.includes('aborted') || errorMessage.includes('AbortError')) {
+      return;
+    }
+
     handlers.onError(errorMessage);
   }
 }

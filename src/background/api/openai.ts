@@ -9,6 +9,7 @@ export interface OpenAIRequestOptions {
   temperature?: number;
   maxTokens?: number;
   stream?: boolean;
+  signal?: AbortSignal;
 }
 
 export interface OpenAIResponse {
@@ -41,6 +42,7 @@ export async function callOpenAI(options: OpenAIRequestOptions): Promise<Respons
       max_tokens: options.maxTokens,
       stream: options.stream ?? false,
     }),
+    signal: options.signal,
   });
 
   if (!response.ok) {
